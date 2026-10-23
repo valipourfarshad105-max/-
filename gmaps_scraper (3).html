@@ -1,0 +1,2399 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>استخراج‌کنندهٔ مستقل اطلاعات گوگل مپ (نسخهٔ کامل HTML بدون نیاز به سرور)</title>
+<style>
+    :root {
+        --brand: #ea580c;
+        --brand-dark: #c2410c;
+        --brand-darker: #9a3412;
+        --brand-soft: #fff7ed;
+        --brand-border: #fed7aa;
+        --bg: #f3f4f6;
+        --card: #ffffff;
+        --text: #111827;
+        --muted: #6b7280;
+        --danger: #dc2626;
+        --danger-dark: #b91c1c;
+        --ok: #15803d;
+        --ok-soft: #dcfce7;
+        --blue: #1d4ed8;
+        --blue-soft: #eff6ff;
+    }
+    * { box-sizing: border-box; }
+    body {
+        font-family: "Vazirmatn", "IRANSans", "Segoe UI", Tahoma, sans-serif;
+        direction: rtl;
+        background: var(--bg);
+        margin: 0;
+        color: var(--text);
+        line-height: 1.65;
+    }
+    header {
+        background: linear-gradient(135deg, #9a3412 0%, #c2410c 45%, #ea580c 100%);
+        color: #fff;
+        padding: 24px 18px 22px;
+        text-align: center;
+        box-shadow: 0 3px 14px rgba(154, 52, 18, 0.22);
+    }
+    header h1 { margin: 0 0 6px 0; font-size: 22px; font-weight: 800; }
+    header p { margin: 0; font-size: 13px; opacity: 0.94; max-width: 720px; margin-inline: auto; }
+    .header-badges {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+    }
+    .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: rgba(255,255,255,0.18);
+        border: 1px solid rgba(255,255,255,0.28);
+        padding: 3px 12px;
+        border-radius: 999px;
+        font-size: 11.5px;
+        font-weight: 600;
+    }
+
+    .container { max-width: 1020px; margin: 0 auto; padding: 20px 15px 50px; }
+
+    .card {
+        background: var(--card);
+        border-radius: 14px;
+        padding: 20px 22px;
+        margin-bottom: 18px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        border: 1px solid #e5e7eb;
+    }
+    .card h2 {
+        font-size: 16.5px;
+        margin: 0 0 14px 0;
+        color: #7c2d12;
+        border-bottom: 2px solid var(--brand-border);
+        padding-bottom: 9px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    label { display: block; font-size: 13px; font-weight: 700; margin: 12px 0 5px; color: #374151; }
+    input[type=text], input[type=number], input[type=password], select, textarea {
+        width: 100%;
+        padding: 9px 11px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 13.5px;
+        font-family: inherit;
+        direction: rtl;
+        background: #fff;
+        color: var(--text);
+        transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    input.ltr, textarea.ltr { direction: ltr; text-align: left; }
+    input:focus, select:focus, textarea:focus {
+        outline: none;
+        border-color: var(--brand);
+        box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.15);
+    }
+    textarea { min-height: 120px; resize: vertical; }
+    .hint { font-size: 11.5px; color: var(--muted); margin-top: 5px; }
+    .msg-line { font-size: 12px; font-weight: 700; color: var(--brand-dark); margin-top: 6px; min-height: 18px; }
+
+    .row { display: flex; gap: 12px; flex-wrap: wrap; }
+    .row > div { flex: 1; min-width: 160px; }
+
+    button {
+        cursor: pointer;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 18px;
+        font-size: 13.5px;
+        font-weight: 700;
+        font-family: inherit;
+        transition: background 0.15s, transform 0.05s, opacity 0.15s;
+    }
+    button:active { transform: translateY(1px); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary { background: var(--brand); color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: var(--brand-dark); }
+    .btn-success { background: var(--ok); color: #fff; }
+    .btn-success:hover:not(:disabled) { background: #166534; }
+    .btn-blue { background: var(--blue); color: #fff; }
+    .btn-blue:hover:not(:disabled) { background: #1e40af; }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-danger:hover:not(:disabled) { background: var(--danger-dark); }
+    .btn-secondary { background: #e5e7eb; color: #1f2937; }
+    .btn-secondary:hover:not(:disabled) { background: #d1d5db; }
+    .btn-sm { padding: 7px 13px; font-size: 12.5px; }
+    .btn-row { display: flex; gap: 9px; flex-wrap: wrap; margin-top: 14px; align-items: center; }
+
+    .upload-box, .advanced-box {
+        background: #f9fafb;
+        border: 1px dashed #cbd5e1;
+        border-radius: 10px;
+        padding: 13px 15px;
+        margin-top: 14px;
+    }
+    details.advanced-box { border-style: solid; border-color: #e5e7eb; }
+    details.advanced-box summary {
+        cursor: pointer;
+        font-weight: 700;
+        font-size: 13px;
+        color: #4b5563;
+        user-select: none;
+    }
+
+    .warn-box {
+        background: #fffbeb;
+        border-right: 4px solid #f59e0b;
+        border-radius: 8px;
+        padding: 10px 14px;
+        font-size: 12.5px;
+        margin-bottom: 14px;
+        color: #78350f;
+    }
+    .error-box {
+        background: #fef2f2;
+        border-right-color: var(--danger);
+        color: #991b1b;
+    }
+
+    .counter-tag {
+        font-size: 11.5px;
+        font-weight: 700;
+        color: var(--brand-darker);
+        background: var(--brand-soft);
+        border: 1px solid var(--brand-border);
+        padding: 2px 9px;
+        border-radius: 999px;
+    }
+
+    .status-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+    .badge {
+        display: inline-block;
+        padding: 3px 12px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+    .badge.running { background: var(--ok-soft); color: var(--ok); }
+    .badge.stopping { background: #fef3c7; color: #b45309; }
+    .badge.idle { background: #e5e7eb; color: #4b5563; }
+    .badge.error { background: #fee2e2; color: #b91c1c; }
+
+    .status-box {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+        gap: 10px;
+        margin-bottom: 14px;
+    }
+    .stat {
+        background: var(--brand-soft);
+        border: 1px solid var(--brand-border);
+        border-radius: 10px;
+        padding: 11px 12px;
+        text-align: center;
+    }
+    .stat .num { font-size: 21px; font-weight: 800; color: var(--brand-dark); }
+    .stat .lbl { font-size: 11.5px; color: #6b7280; margin-top: 2px; }
+
+    .current-loc-banner {
+        background: #f8fafc;
+        border: 1px dashed #cbd5e1;
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-size: 12.5px;
+        color: #334155;
+        margin-bottom: 10px;
+    }
+    .progress-bar-outer {
+        background: #e5e7eb;
+        border-radius: 999px;
+        height: 16px;
+        overflow: hidden;
+        margin-bottom: 14px;
+    }
+    .progress-bar-inner {
+        background: linear-gradient(90deg, #ea580c, #fb923c);
+        height: 100%;
+        width: 0%;
+        transition: width 0.35s ease;
+    }
+
+    #logBox {
+        background: #0f172a;
+        color: #e2e8f0;
+        border-radius: 10px;
+        padding: 12px 14px;
+        font-family: "Consolas", "Courier New", monospace;
+        font-size: 12px;
+        height: 270px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        direction: rtl;
+        text-align: right;
+        line-height: 1.75;
+    }
+
+    .table-wrap {
+        overflow-x: auto;
+        margin-top: 12px;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        max-height: 460px;
+        overflow-y: auto;
+    }
+    table.preview {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+        min-width: 720px;
+    }
+    table.preview th, table.preview td {
+        border-bottom: 1px solid #f1f5f9;
+        padding: 8px 10px;
+        text-align: right;
+        vertical-align: top;
+    }
+    table.preview th {
+        background: var(--brand-soft);
+        color: #7c2d12;
+        font-weight: 700;
+        position: sticky;
+        top: 0;
+        z-index: 2;
+    }
+    table.preview tr:hover td { background: #fffaf5; }
+    .phone-chip {
+        display: inline-block;
+        direction: ltr;
+        white-space: nowrap;
+        background: #ecfdf5;
+        color: #065f46;
+        border: 1px solid #a7f3d0;
+        border-radius: 5px;
+        padding: 1px 6px;
+        font-weight: 700;
+        margin: 1px;
+    }
+    .land-chip {
+        display: inline-block;
+        direction: ltr;
+        white-space: nowrap;
+        background: var(--blue-soft);
+        color: #1e40af;
+        border: 1px solid #bfdbfe;
+        border-radius: 5px;
+        padding: 1px 6px;
+        margin: 1px;
+    }
+    pre.code-snippet {
+        background: #1e293b;
+        color: #f8fafc;
+        direction: ltr;
+        text-align: left;
+        padding: 10px 12px;
+        border-radius: 8px;
+        font-size: 11.5px;
+        overflow-x: auto;
+        margin: 8px 0 0;
+    }
+</style>
+</head>
+<body>
+
+<header>
+    <h1>🗺️ پنل مستقل استخراج اطلاعات کسب‌وکارها از گوگل مپ</h1>
+    <p>نسخهٔ ۱۰۰٪ تحت مرورگر (تک‌فایل HTML) — قابل اجرا روی موبایل، تبلت، ویندوز، مک و هر هاست استاتیک بدون نیاز به پایتون یا سرور</p>
+    <div class="header-badges">
+        <span class="pill" id="activeWorkspacePill" style="background:rgba(255,255,255,0.28);font-weight:700;">📌 پنل فعال: پنل اصلی (۱)</span>
+        <button type="button" id="openNewInstanceBtn" class="pill" style="cursor:pointer;color:#1e293b;background:#fef08a;border:none;font-family:inherit;font-weight:700;">➕ باز کردن تب مستقل جدید (اجرای همزمان استان دیگر)</button>
+        <button type="button" id="downloadSelfHtmlBtn" class="pill" style="cursor:pointer;color:#fff;font-family:inherit;">⬇️ ذخیرهٔ نسخهٔ جدید فایل HTML روی سیستم</button>
+    </div>
+</header>
+
+<div class="container">
+
+    <div id="sandboxOfflineAlert" style="display:none;background:#fef2f2;border:2px solid #dc2626;color:#991b1b;border-radius:12px;padding:14px 16px;margin-bottom:18px;font-size:13px;line-height:1.8;">
+        <b>⚠️ توجه مهم — شما داخل پنجرهٔ «پیش‌نمایش آفلاین فایل» هستید!</b><br>
+        در کادر نمایش کد/فایل، اینترنت به‌صورت امنیتی مسدود است و به همین دلیل دکمهٔ تست اتصال پیام <code>Failed to fetch</code> می‌دهد.<br>
+        ✅ <b>راه‌حل فوری (یکی از این دو مورد):</b>
+        ۱) دکمهٔ <b>Download (دانلود ⬇️)</b> بالای همین کادر را بزنید و فایل <code>gmaps_scraper.html</code> را مستقیم روی مرورگر کامپیوتر یا گوشی خود باز کنید، <b>یا</b>
+        ۲) از تب <b>Live Preview («نسخه آنلاین گوگل مپ»)</b> در همین صفحه استفاده کنید که مستقیم به اینترنت پرسرعت متصل است!
+    </div>
+
+    <!-- ۱. تنظیمات جستجو و لوکیشن‌ها -->
+    <div class="card">
+        <h2>
+            <span>۱. تنظیمات جستجو و لیست لوکیشن‌ها</span>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                <span id="fileNameBadge" class="counter-tag" style="display:none;"></span>
+                <button type="button" class="btn-blue btn-sm" id="testConnBtn">🔌 تست اتصال به گوگل مپ</button>
+            </div>
+        </h2>
+        <div id="connTestMsg" class="msg-line" style="margin-top:-6px;margin-bottom:8px;"></div>
+
+        <div class="warn-box">
+            <strong>💡 نکتهٔ مهم دربارهٔ لوکیشن‌ها:</strong>
+            عبارت جستجو دقیقاً با الگوی آزمایش‌شدهٔ <b>«لوکیشن + (کلمه۱ OR کلمه۲ ...)»</b> ساخته می‌شود تا گوگل مپ هرگز به شهر اشتباه (مثلاً تهران) نپرد. تمام تنظیمات و نتایج به‌صورت خودکار در حافظهٔ دائمی مرورگر شما ذخیره می‌شوند و حتی با بستن تب یا خاموش شدن سیستم با دکمهٔ <b>«ادامهٔ کار قبلی»</b> قابل ادامه هستند.
+        </div>
+
+        <label>
+            کلمات کلیدی جستجو (هر خط = یک کلمه یا عبارت، حداکثر ۳۰ مورد)
+            <span id="kwCountTag" class="counter-tag" style="margin-right:6px;">۰ / ۳۰</span>
+        </label>
+        <textarea id="keywords" style="min-height:105px;" placeholder="لوازم یدکی&#10;قطعات خودرو&#10;فروشگاه لوازم یدکی&#10;بازار لوازم یدکی"></textarea>
+        <div class="hint">
+            برنامه همهٔ خطوط را با عملگر استاندارد <b>OR</b> ترکیب می‌کند تا نتیجهٔ تمام عبارات در هر شهر استخراج شود.
+        </div>
+        <div class="btn-row" style="margin-top:8px;">
+            <button type="button" class="btn-secondary btn-sm" id="saveKeywordsBtn">💾 ذخیرهٔ کلمات کلیدی</button>
+            <button type="button" class="btn-danger btn-sm" id="clearKeywordsBtn">پاک‌کردن کلمات کلیدی</button>
+        </div>
+        <div id="keywordsMsg" class="msg-line"></div>
+
+        <label style="margin-top:16px;">
+            لیست لوکیشن‌ها (هر خط = یک شهر / شهرستان / منطقه)
+            <span id="locCountTag" class="counter-tag" style="margin-right:6px;">۰ لوکیشن</span>
+        </label>
+        <textarea id="locations" placeholder="استان یزد شهرستان یزد بخش مرکزی دهستان فجر&#10;استان یزد شهرستان اردکان بخش مرکزی روستای عقدا&#10;استان آذربایجان شرقی شهرستان آذرشهر"></textarea>
+        <div class="hint">
+            هنگام ذخیره‌سازی، کاراکتر «/» خودکار با فاصله جایگزین شده و ردیف‌های خالی و تکراری حذف می‌شوند.
+        </div>
+        <div class="btn-row" style="margin-top:8px;">
+            <button type="button" class="btn-secondary btn-sm" id="saveLocationsBtn">💾 ذخیره و بهینه‌سازی لوکیشن‌ها</button>
+            <button type="button" class="btn-danger btn-sm" id="clearLocationsBtn">پاک‌کردن همهٔ لوکیشن‌ها</button>
+        </div>
+        <div id="locationsMsg" class="msg-line"></div>
+
+        <!-- بارگذاری فایل اکسل / CSV / TXT کاملاً آفلاین در مرورگر -->
+        <div class="upload-box">
+            <label style="margin-top:0;">📂 بارگذاری لیست لوکیشن‌ها از فایل اکسل (.xlsx) یا متنی (.csv / .txt)</label>
+            <div class="row" style="align-items:center;">
+                <div style="flex:2; min-width:220px;">
+                    <input type="file" id="xlsxFile" accept=".xlsx,.xlsm,.csv,.txt">
+                </div>
+                <div style="flex:1; min-width:170px;">
+                    <button type="button" class="btn-secondary btn-sm" id="uploadAppendBtn" style="width:100%;">➕ افزودن به انتهای لیست</button>
+                </div>
+                <div style="flex:1; min-width:170px;">
+                    <button type="button" class="btn-secondary btn-sm" id="uploadReplaceBtn" style="width:100%;">🔄 جایگزینی کل لیست</button>
+                </div>
+            </div>
+            <div class="hint">
+                بدون نیاز به اینترنت یا کتابخانه خارجی مستقیماً شیت اول فایل اکسل (تک‌ستونی یا چندستونی استان/شهرستان/بخش/دهستان) خوانده شده و خروجی هم خودکار با نام <code>نام‌فایل_نتایج.xlsx</code> ذخیره می‌شود.
+            </div>
+            <div id="uploadMsg" class="msg-line"></div>
+        </div>
+
+        <div class="row" style="margin-top:14px;">
+            <div>
+                <label>حداکثر نتیجه در هر لوکیشن</label>
+                <input type="number" id="maxResults" value="120" min="1" max="400">
+            </div>
+            <div>
+                <label>مکث بین صفحات ۲۰تایی (ثانیه)</label>
+                <input type="number" id="pageDelay" value="3.2" step="0.2" min="0.5">
+            </div>
+            <div>
+                <label>مکث بین لوکیشن‌ها (ثانیه)</label>
+                <input type="number" id="locDelay" value="3.5" step="0.5" min="0.5">
+            </div>
+        </div>
+
+        <label style="margin-top:12px;display:flex;align-items:center;gap:8px;font-weight:600;background:#f9fafb;border:1px solid #e5e7eb;padding:9px 12px;border-radius:8px;cursor:pointer;">
+            <input type="checkbox" id="dedupPhoneChk" style="width:16px;height:16px;accent-color:#ea580c;cursor:pointer;">
+            <span>علاوه بر حذف خودکار مکان‌های تکراری (Place ID)، اگر یک مغازه چند پین مختلف با <b>شماره موبایل/تلفن یکسان</b> ثبت کرده هم فقط یک‌بار ذخیره شود</span>
+        </label>
+
+        <!-- تنظیمات پیشرفته درگاه ارتباطی (اختیاری) -->
+        <details class="advanced-box">
+            <summary>⚙️ تنظیمات پیشرفتهٔ درگاه ارتباطی و کلودفلر ورکر اختصاصی (اختیاری — به‌طور پیش‌فرض بدون تنظیم کار می‌کند)</summary>
+            <div style="margin-top:10px;">
+                <div class="hint">
+                    این برنامه به‌طور پیش‌فرض بدون هیچ تنظیماتی از طریق موتور داخلی ضد CORS مستقیماً اطلاعات کامل گوگل مپ را استخراج می‌کند.
+                    اگر روی اینترنت بدون فیلترشکن هستید یا قصد استخراج ده‌ها هزار رکورد با <b>سرعت نامحدود (نیم‌ثانیه برای هر ۲۰ مغازه)</b> دارید، می‌توانید آدرس Cloudflare Worker رایگان خود یا کلید رایگان Jina را در کادر زیر بگذارید:
+                </div>
+                <div class="row" style="margin-top:8px;">
+                    <div style="flex:2;min-width:240px;">
+                        <label>لیست آدرس‌های پروکسی / Cloudflare Worker اختصاصی (اختیاری — هر خط یک آدرس برای چرخش خودکار ضدکپچا)</label>
+                        <textarea class="ltr" id="customProxyUrl" style="min-height:68px;" placeholder="https://worker-1.workers.dev/?url=&#10;https://worker-2.workers.dev/?url="></textarea>
+                    </div>
+                    <div style="flex:1;min-width:200px;">
+                        <label>کلید رایگان Jina API برای سرعت ۱۰ برابر (اختیاری)</label>
+                        <input type="password" class="ltr" id="jinaApiKey" placeholder="jina_...">
+                    </div>
+                </div>
+                <div class="btn-row" style="margin-top:10px;">
+                    <button type="button" class="btn-secondary btn-sm" id="saveAdvBtn">💾 ذخیرهٔ تنظیمات ارتباطی</button>
+                    <button type="button" class="btn-secondary btn-sm" id="toggleWorkerCodeBtn">📋 نمایش کد ضدکپچای Cloudflare Worker رایگان</button>
+                </div>
+                <div id="workerCodeWrap" style="display:none;margin-top:10px;">
+                    <div class="hint">این کد بهینه‌شده (با چرخش خودکار User-Agent و کوکی رضایت گوگل) را در ۱ یا چند Worker رایگان Cloudflare بگذارید تا با چرخش خودکار IP لبهٔ کلودفلر، سرعت نامحدود و حداقل احتمال کپچا کار کند:</div>
+                    <pre class="code-snippet" id="workerCodeText">const UAS = [
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
+  "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36"
+];
+const CORS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, OPTIONS",
+  "Access-Control-Allow-Headers": "*"
+};
+export default {
+  async fetch(request) {
+    if (request.method === "OPTIONS") {
+      return new Response(null, { status: 204, headers: CORS });
+    }
+    const target = new URL(request.url).searchParams.get("url");
+    if (!target) {
+      return new Response("✅ ورکر گوگل مپ شما فعال و آماده است! همین آدرس بالای مرورگر را کپی کنید و در برنامه قرار دهید.", {
+        status: 200,
+        headers: { ...CORS, "Content-Type": "text/plain; charset=utf-8" }
+      });
+    }
+    const ua = UAS[Math.floor(Math.random() * UAS.length)];
+    const resp = await fetch(target, {
+      headers: {
+        "User-Agent": ua,
+        "Accept-Language": "fa-IR,fa;q=0.9,en-US;q=0.8",
+        "Cookie": "SOCS=CAISHAgBEhJnd3NfMjAyNDAxMDEtMF9SQzIaAmZhIAEaBgiA_LyuBg"
+      }
+    });
+    const body = await resp.arrayBuffer();
+    return new Response(body, {
+      status: resp.status,
+      headers: { ...CORS, "Content-Type": "text/plain; charset=utf-8" }
+    });
+  }
+};</pre>
+                </div>
+            </div>
+        </details>
+
+        <div class="btn-row" style="margin-top:18px;">
+            <button class="btn-primary" id="startFreshBtn">🚀 شروع از ابتدا</button>
+            <button class="btn-success" id="resumeBtn">▶️ ادامهٔ کار قبلی</button>
+            <button class="btn-danger" id="stopBtn" disabled>⏹️ توقف اجرا</button>
+        </div>
+    </div>
+
+    <!-- ۲. وضعیت لحظه‌ای اجرا -->
+    <div class="card">
+        <h2>
+            <span>۲. وضعیت لحظه‌ای اجرا و گزارش زنده</span>
+            <span id="engineModeTag" class="counter-tag">موتور: خودکار بدون سرور</span>
+        </h2>
+
+        <div class="status-header">
+            <div>وضعیت فعلی: <span id="statusBadge" class="badge idle">آماده به کار</span></div>
+            <div style="display:flex;gap:12px;align-items:center;">
+                <label style="margin:0;font-weight:normal;font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer;">
+                    <input type="checkbox" id="autoScrollChk" checked> اسکرول خودکار لاگ
+                </label>
+                <button type="button" class="btn-secondary btn-sm" id="clearLogBtn">پاک کردن صفحه لاگ</button>
+            </div>
+        </div>
+
+        <div class="status-box">
+            <div class="stat"><div class="num" id="statLoc">۰ / ۰</div><div class="lbl">لوکیشن تکمیل‌شده</div></div>
+            <div class="stat"><div class="num" id="statResults">۰</div><div class="lbl">کل کسب‌وکار یکتا</div></div>
+            <div class="stat"><div class="num" id="statMobiles">۰</div><div class="lbl">دارای شماره موبایل (09)</div></div>
+            <div class="stat"><div class="num" id="statPhones">۰</div><div class="lbl">دارای تلفن تماس</div></div>
+            <div class="stat"><div class="num" id="statPct">۰٪</div><div class="lbl">درصد پیشرفت کل</div></div>
+        </div>
+
+        <div id="activeLocBox" class="current-loc-banner">لوکیشن فعال: —</div>
+
+        <div class="progress-bar-outer"><div class="progress-bar-inner" id="progressBar"></div></div>
+
+        <div id="errorBox" style="display:none;" class="warn-box error-box"></div>
+
+        <div id="logBox">آماده برای شروع استخراج...</div>
+    </div>
+
+    <!-- ۳. خروجی اکسل / CSV و پیش‌نمایش زنده -->
+    <div class="card">
+        <h2>
+            <span>۳. دانلود خروجی اکسل / CSV و جدول پیش‌نمایش زنده</span>
+            <span id="tableCountBadge" class="counter-tag">۰ رکورد</span>
+        </h2>
+
+        <div class="row">
+            <div>
+                <label>قالب ستون‌های فایل خروجی</label>
+                <select id="exportLayout">
+                    <option value="full">کامل و پیشرفته (۱۲ ستون: نام، دسته‌بندی، موبایل، ثابت، آدرس، وب‌سایت، امتیاز، تعداد نظر، مختصات، لینک)</option>
+                    <option value="classic">کلاسیک مشابه نسخهٔ اصلی گیت‌هاب (۷ ستون اصلی)</option>
+                </select>
+            </div>
+            <div>
+                <label>فیلتر ردیف‌ها هنگام خروجی گرفتن</label>
+                <select id="exportFilter">
+                    <option value="all">همهٔ کسب‌وکارهای استخراج‌شده</option>
+                    <option value="with_phone">فقط موارد دارای شماره تماس (موبایل یا ثابت)</option>
+                    <option value="with_mobile">فقط موارد دارای شماره موبایل (۰۹)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="btn-row">
+            <button type="button" class="btn-primary" id="exportXlsxBtn">📥 دانلود فایل اکسل استاندارد (.xlsx)</button>
+            <button type="button" class="btn-secondary" id="exportCsvBtn">📄 دانلود فایل CSV (UTF-8 با BOM)</button>
+            <button type="button" class="btn-secondary" id="exportJsonBtn">💾 پشتیبان‌گیری کامل (.json)</button>
+            <button type="button" class="btn-secondary" id="importJsonBtn">📂 بازیابی فایل پشتیبان (.json)</button>
+            <input type="file" id="importJsonInput" accept=".json" style="display:none;">
+        </div>
+        <div class="hint">
+            فایل اکسل خروجی به‌صورت بومی و راست‌به‌چپ (RTL) همراه با هدر رنگی فریز شده و بدون نیاز به هیچ اینترنت یا سرور خارجی مستقیماً روی دستگاه شما ساخته می‌شود.
+        </div>
+
+        <div style="margin-top:16px;">
+            <input type="text" id="previewSearch" placeholder="🔍 جستجوی آنی در بین تمام نتایج ذخیره‌شده (نام فروشگاه، شهر، آدرس، دسته‌بندی، شماره موبایل)...">
+        </div>
+
+        <div class="table-wrap">
+            <table class="preview">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>نام فروشگاه / محل</th>
+                        <th>دسته‌بندی</th>
+                        <th>شماره موبایل / ثابت</th>
+                        <th>لوکیشن و آدرس</th>
+                        <th>امتیاز</th>
+                    </tr>
+                </thead>
+                <tbody id="previewBody">
+                    <tr><td colspan="6" style="text-align:center;color:#888;padding:18px;">هنوز نتیجه‌ای ثبت نشده است.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ۴. ریست کامل -->
+    <div class="card" style="border-color:#fecaca;">
+        <h2 style="color:#991b1b; border-bottom-color:#fecaca;">⚠️ ریست کامل برنامه</h2>
+        <p style="font-size:13px; color:#4b5563; margin-top:0;">
+            با زدن این دکمه، تمام کلمات کلیدی، لیست لوکیشن‌ها، وضعیت ادامهٔ کار و کلیهٔ نتایج استخراج‌شده از حافظهٔ مرورگر پاک می‌شوند. این عملیات <b>غیرقابل بازگشت</b> است.
+        </p>
+        <button type="button" class="btn-danger btn-sm" id="resetAllBtn">🗑️ ریست کامل برنامه و پاک‌کردن همهٔ اطلاعات</button>
+        <div id="resetMsg" class="msg-line"></div>
+    </div>
+
+</div>
+
+<script>
+(() => {
+"use strict";
+
+const $ = (id) => document.getElementById(id);
+const MAX_KEYWORDS = 30;
+const BASE_DB_NAME = "GMapsStandaloneScraperDB";
+
+function resolveWorkspaceIdentity() {
+    let wsName = "";
+    try {
+        const sp = new URLSearchParams(location.search || "");
+        wsName = (sp.get("ws") || "").trim();
+    } catch (_e) {}
+    if (!wsName && location.hash) {
+        const rawHash = decodeURIComponent(location.hash.replace(/^#+/, "")).trim();
+        wsName = rawHash.startsWith("ws=") ? rawHash.slice(3).trim() : rawHash;
+    }
+    if (!wsName) {
+        try {
+            const rawFile = decodeURIComponent((location.pathname || "").split("/").pop() || "");
+            const base = rawFile.replace(/\.html?$/i, "").trim();
+            if (base && base.toLowerCase() !== "gmaps_scraper" && base.toLowerCase() !== "index") {
+                wsName = base;
+            }
+        } catch (_e) {}
+    }
+    const dbName = wsName ? `${BASE_DB_NAME}__${wsName}` : BASE_DB_NAME;
+    return { wsName, dbName, label: wsName || "پنل اصلی (۱)" };
+}
+
+const WORKSPACE = resolveWorkspaceIdentity();
+const DB_NAME = WORKSPACE.dbName;
+const DB_VERSION = 1;
+
+// ============================================================================
+// ۱. توابع پایه: اعداد فارسی، پاک‌سازی یونیکد، نرمال‌سازی شماره موبایل/ثابت
+// ============================================================================
+
+const DIGIT_MAP = {
+    "۰":"0","۱":"1","۲":"2","۳":"3","۴":"4","۵":"5","۶":"6","۷":"7","۸":"8","۹":"9",
+    "٠":"0","١":"1","٢":"2","٣":"3","٤":"4","٥":"5","٦":"6","٧":"7","٨":"8","٩":"9",
+    "٫":"."
+};
+
+function persianDigits(n) {
+    return String(n ?? 0).replace(/\d/g, d => "۰۱۲۳۴۵۶۷۸۹"[d]);
+}
+
+function toEnglishDigits(str) {
+    return String(str || "").replace(/[۰-۹٠-٩٫]/g, ch => DIGIT_MAP[ch] ?? ch);
+}
+
+function cleanDisplayText(str) {
+    if (!str) return "";
+    return String(str)
+        .replace(/[\ue000-\uf8ff\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, "")
+        .replace(/،\s*،+/g, "،")
+        .replace(/[ \t\r\n]+/g, " ")
+        .trim();
+}
+
+function escapeHtml(str) {
+    return String(str || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+}
+
+function normalizePhone(raw) {
+    const ascii = toEnglishDigits(raw || "");
+    let digits = ascii.replace(/\D/g, "");
+    if (!digits) return null;
+
+    if (digits.startsWith("0098") && digits.length > 6) {
+        digits = "0" + digits.slice(4);
+    } else if (digits.startsWith("98") && digits.length > 10) {
+        digits = "0" + digits.slice(2);
+    } else if (digits.length === 10 && digits.startsWith("9")) {
+        digits = "0" + digits;
+    }
+
+    if (digits.length < 4) return null;
+    if (digits.startsWith("09") && digits.length === 11) {
+        return { kind: "mobile", number: digits };
+    }
+    return { kind: "landline", number: digits };
+}
+
+function buildSearchKeyword(keywords) {
+    const cleaned = (keywords || []).map(k => k.trim()).filter(Boolean);
+    if (!cleaned.length) return "";
+    if (cleaned.length === 1) return cleaned[0];
+    return "(" + cleaned.join(" OR ") + ")";
+}
+
+function optimizeLocations(locations) {
+    const seen = new Set();
+    const out = [];
+    for (const loc of (locations || [])) {
+        if (!loc) continue;
+        const cleaned = String(loc).replace(/\//g, " ").replace(/\s+/g, " ").trim();
+        if (!cleaned) continue;
+        const key = cleaned.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        out.push(cleaned);
+    }
+    return out;
+}
+
+// ============================================================================
+// ۲. پایگاه‌دادهٔ دائمی IndexedDB داخل مرورگر (ظرفیت صدها هزار رکورد + کش O(1))
+// ============================================================================
+
+class BrowserStorage {
+    constructor() {
+        this.db = null;
+        this.memKV = {};            // پشتیبان حافظه اگر مرورگر اجازه IndexedDB ندهد (حالت ناشناس/Iframe)
+        this.nextMemId = 1;
+        this.records = [];          // آرایهٔ مرتب در حافظه برای دسترسی و جستجوی آنی
+        this.seenKeys = new Set();  // بررسی تکراری بودن در O(1)
+        this.seenPhones = new Set();
+        this.mobileCount = 0;
+        this.phoneCount = 0;
+    }
+
+    async init() {
+        try {
+            this.db = await new Promise((resolve, reject) => {
+                const req = indexedDB.open(DB_NAME, DB_VERSION);
+                req.onupgradeneeded = (ev) => {
+                    const db = ev.target.result;
+                    if (!db.objectStoreNames.contains("kv")) {
+                        db.createObjectStore("kv", { keyPath: "k" });
+                    }
+                    if (!db.objectStoreNames.contains("results")) {
+                        const st = db.createObjectStore("results", { keyPath: "id", autoIncrement: true });
+                        st.createIndex("dedup_key", "dedup_key", { unique: true });
+                    }
+                };
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+            await this._hydrateMemoryCache();
+        } catch (_err) {
+            this.db = null;
+        }
+    }
+
+    async _hydrateMemoryCache() {
+        if (!this.db) return;
+        const all = await this._txGetAll("results");
+        this.records = all;
+        this.seenKeys.clear();
+        this.seenPhones = new Set();
+        this.mobileCount = 0;
+        this.phoneCount = 0;
+        for (const r of all) {
+            if (r.dedup_key) this.seenKeys.add(r.dedup_key);
+            for (const m of (r.mobiles || [])) this.seenPhones.add(m);
+            for (const l of (r.landlines || [])) this.seenPhones.add(l);
+            const hasMob = r.mobiles && r.mobiles.length > 0;
+            const hasLand = r.landlines && r.landlines.length > 0;
+            if (hasMob) this.mobileCount++;
+            if (hasMob || hasLand) this.phoneCount++;
+        }
+    }
+
+    _txGetAll(storeName) {
+        return new Promise((resolve, reject) => {
+            const tx = this.db.transaction(storeName, "readonly");
+            const req = tx.objectStore(storeName).getAll();
+            req.onsuccess = () => resolve(req.result || []);
+            req.onerror = () => reject(req.error);
+        });
+    }
+
+    async getKV(key, fallback = null) {
+        if (!this.db) return (key in this.memKV) ? this.memKV[key] : fallback;
+        return new Promise((resolve) => {
+            const tx = this.db.transaction("kv", "readonly");
+            const req = tx.objectStore("kv").get(key);
+            req.onsuccess = () => resolve(req.result ? req.result.v : fallback);
+            req.onerror = () => resolve(fallback);
+        });
+    }
+
+    async setKV(key, value) {
+        this.memKV[key] = value;
+        if (!this.db) return;
+        return new Promise((resolve, reject) => {
+            const tx = this.db.transaction("kv", "readwrite");
+            tx.objectStore("kv").put({ k: key, v: value });
+            tx.oncomplete = () => resolve();
+            tx.onerror = () => reject(tx.error);
+        });
+    }
+
+    hasSeen(key) {
+        return !!key && this.seenKeys.has(key);
+    }
+
+    async addResult(item, dedupByPhone = false) {
+        const key = (item.place_id || item.url || "").trim();
+        if (!key || this.seenKeys.has(key)) return false;
+
+        if (dedupByPhone) {
+            const allNums = [...(item.mobiles || []), ...(item.landlines || [])];
+            if (allNums.length && allNums.some(n => this.seenPhones.has(n))) {
+                return false;
+            }
+        }
+
+        const record = { ...item, dedup_key: key };
+        let insertedId = null;
+        if (!this.db) {
+            insertedId = this.nextMemId++;
+        } else {
+            insertedId = await new Promise((resolve) => {
+                const tx = this.db.transaction("results", "readwrite");
+                const req = tx.objectStore("results").add(record);
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => resolve(null);
+            });
+        }
+        if (insertedId === null) {
+            this.seenKeys.add(key);
+            return false;
+        }
+        record.id = insertedId;
+        this.seenKeys.add(key);
+        for (const m of (record.mobiles || [])) this.seenPhones.add(m);
+        for (const l of (record.landlines || [])) this.seenPhones.add(l);
+        this.records.push(record);
+        if (record.mobiles && record.mobiles.length) this.mobileCount++;
+        if ((record.mobiles && record.mobiles.length) || (record.landlines && record.landlines.length)) {
+            this.phoneCount++;
+        }
+        return true;
+    }
+
+    getFilteredResults(filterMode = "all") {
+        if (filterMode === "with_mobile") {
+            return this.records.filter(r => r.mobiles && r.mobiles.length > 0);
+        }
+        if (filterMode === "with_phone") {
+            return this.records.filter(r => (r.mobiles && r.mobiles.length > 0) || (r.landlines && r.landlines.length > 0));
+        }
+        return this.records.slice();
+    }
+
+    searchRecent(queryStr = "", limit = 50) {
+        const q = (queryStr || "").trim().toLowerCase();
+        const out = [];
+        for (let i = this.records.length - 1; i >= 0 && out.length < limit; i--) {
+            const r = this.records[i];
+            if (!q) {
+                out.push(r);
+                continue;
+            }
+            const hay = [
+                r.name, r.category, r.location, r.address,
+                ...(r.mobiles || []), ...(r.landlines || [])
+            ].join(" ").toLowerCase();
+            if (hay.includes(q)) out.push(r);
+        }
+        return out;
+    }
+
+    async clearResultsOnly() {
+        if (this.db) {
+            await new Promise((resolve, reject) => {
+                const tx = this.db.transaction("results", "readwrite");
+                tx.objectStore("results").clear();
+                tx.oncomplete = () => resolve();
+                tx.onerror = () => reject(tx.error);
+            });
+        }
+        this.records = [];
+        this.seenKeys.clear();
+        this.seenPhones = new Set();
+        this.mobileCount = 0;
+        this.phoneCount = 0;
+    }
+
+    async resetAll() {
+        await this.clearResultsOnly();
+        this.memKV = {};
+        if (this.db) {
+            await new Promise((resolve, reject) => {
+                const tx = this.db.transaction("kv", "readwrite");
+                tx.objectStore("kv").clear();
+                tx.oncomplete = () => resolve();
+                tx.onerror = () => reject(tx.error);
+            });
+        }
+    }
+}
+
+// ============================================================================
+// ۳. موتور بومی خواندن و ساخت فایل اکسل استاندارد OOXML (.xlsx) بدون هیچ CDN خارجی
+// ============================================================================
+
+const CRC_TABLE = (() => {
+    const t = new Uint32Array(256);
+    for (let n = 0; n < 256; n++) {
+        let c = n;
+        for (let k = 0; k < 8; k++) {
+            c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+        }
+        t[n] = c >>> 0;
+    }
+    return t;
+})();
+
+function crc32(bytes) {
+    let crc = 0xFFFFFFFF;
+    for (let i = 0; i < bytes.length; i++) {
+        crc = CRC_TABLE[(crc ^ bytes[i]) & 0xFF] ^ (crc >>> 8);
+    }
+    return (crc ^ 0xFFFFFFFF) >>> 0;
+}
+
+function buildStoredZipBlob(filesMap) {
+    const enc = new TextEncoder();
+    const localParts = [];
+    const centralParts = [];
+    let offset = 0;
+    let count = 0;
+
+    for (const [pathStr, content] of Object.entries(filesMap)) {
+        const nameBytes = enc.encode(pathStr);
+        const dataBytes = content instanceof Uint8Array ? content : enc.encode(content);
+        const sum = crc32(dataBytes);
+        const len = dataBytes.length;
+
+        const lh = new Uint8Array(30 + nameBytes.length);
+        const lv = new DataView(lh.buffer);
+        lv.setUint32(0, 0x04034b50, true);
+        lv.setUint16(4, 20, true);
+        lv.setUint16(6, 0x0800, true); // UTF-8 filename flag
+        lv.setUint16(8, 0, true);      // Method 0: Stored
+        lv.setUint16(10, 0, true);
+        lv.setUint16(12, 0x21, true);
+        lv.setUint32(14, sum, true);
+        lv.setUint32(18, len, true);
+        lv.setUint32(22, len, true);
+        lv.setUint16(26, nameBytes.length, true);
+        lv.setUint16(28, 0, true);
+        lh.set(nameBytes, 30);
+
+        const ch = new Uint8Array(46 + nameBytes.length);
+        const cv = new DataView(ch.buffer);
+        cv.setUint32(0, 0x02014b50, true);
+        cv.setUint16(4, 20, true);
+        cv.setUint16(6, 20, true);
+        cv.setUint16(8, 0x0800, true);
+        cv.setUint16(10, 0, true);
+        cv.setUint16(12, 0, true);
+        cv.setUint16(14, 0x21, true);
+        cv.setUint32(16, sum, true);
+        cv.setUint32(20, len, true);
+        cv.setUint32(24, len, true);
+        cv.setUint16(28, nameBytes.length, true);
+        cv.setUint16(30, 0, true);
+        cv.setUint16(32, 0, true);
+        cv.setUint16(34, 0, true);
+        cv.setUint16(36, 0, true);
+        cv.setUint32(38, 0, true);
+        cv.setUint32(42, offset, true);
+        ch.set(nameBytes, 46);
+
+        localParts.push(lh, dataBytes);
+        centralParts.push(ch);
+        offset += lh.length + len;
+        count++;
+    }
+
+    let centralSize = 0;
+    for (const c of centralParts) centralSize += c.length;
+
+    const eocd = new Uint8Array(22);
+    const ev = new DataView(eocd.buffer);
+    ev.setUint32(0, 0x06054b50, true);
+    ev.setUint16(4, 0, true);
+    ev.setUint16(6, 0, true);
+    ev.setUint16(8, count, true);
+    ev.setUint16(10, count, true);
+    ev.setUint32(12, centralSize, true);
+    ev.setUint32(16, offset, true);
+    ev.setUint16(20, 0, true);
+
+    return new Blob([...localParts, ...centralParts, eocd], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    });
+}
+
+async function readZipEntriesText(arrayBuffer) {
+    const u8 = new Uint8Array(arrayBuffer);
+    const dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
+    const dec = new TextDecoder("utf-8");
+
+    let eocdPos = -1;
+    const minPos = Math.max(0, u8.length - 65558);
+    for (let i = u8.length - 22; i >= minPos; i--) {
+        if (dv.getUint32(i, true) === 0x06054b50) {
+            eocdPos = i;
+            break;
+        }
+    }
+    if (eocdPos < 0) throw new Error("ساختار فایل اکسل معتبر نیست (ZIP EOCD یافت نشد).");
+
+    const totalEntries = dv.getUint16(eocdPos + 10, true);
+    let cdOffset = dv.getUint32(eocdPos + 16, true);
+    const entries = {};
+
+    for (let i = 0; i < totalEntries; i++) {
+        if (dv.getUint32(cdOffset, true) !== 0x02014b50) break;
+        const method = dv.getUint16(cdOffset + 10, true);
+        const compSize = dv.getUint32(cdOffset + 20, true);
+        const nameLen = dv.getUint16(cdOffset + 28, true);
+        const extraLen = dv.getUint16(cdOffset + 30, true);
+        const commentLen = dv.getUint16(cdOffset + 32, true);
+        const localOffset = dv.getUint32(cdOffset + 42, true);
+        const fileName = dec.decode(u8.subarray(cdOffset + 46, cdOffset + 46 + nameLen));
+
+        const lfNameLen = dv.getUint16(localOffset + 26, true);
+        const lfExtraLen = dv.getUint16(localOffset + 28, true);
+        const dataStart = localOffset + 30 + lfNameLen + lfExtraLen;
+        const slice = u8.subarray(dataStart, dataStart + compSize);
+
+        if (fileName.endsWith(".xml") || fileName.endsWith(".rels")) {
+            if (method === 0) {
+                entries[fileName] = dec.decode(slice);
+            } else if (method === 8) {
+                const ds = new DecompressionStream("deflate-raw");
+                const stream = new Blob([slice]).stream().pipeThrough(ds);
+                const plainBuf = await new Response(stream).arrayBuffer();
+                entries[fileName] = dec.decode(plainBuf);
+            }
+        }
+        cdOffset += 46 + nameLen + extraLen + commentLen;
+    }
+    return entries;
+}
+
+async function parseXlsxLocations(arrayBuffer) {
+    const entries = await readZipEntriesText(arrayBuffer);
+    const parser = new DOMParser();
+
+    const sharedStrings = [];
+    if (entries["xl/sharedStrings.xml"]) {
+        const ssDoc = parser.parseFromString(entries["xl/sharedStrings.xml"], "application/xml");
+        const siNodes = ssDoc.getElementsByTagName("si");
+        for (let i = 0; i < siNodes.length; i++) {
+            const tNodes = siNodes[i].getElementsByTagName("t");
+            let combined = "";
+            for (let j = 0; j < tNodes.length; j++) combined += tNodes[j].textContent || "";
+            sharedStrings.push(combined);
+        }
+    }
+
+    const sheetKey = entries["xl/worksheets/sheet1.xml"]
+        ? "xl/worksheets/sheet1.xml"
+        : Object.keys(entries).find(k => k.startsWith("xl/worksheets/sheet") && k.endsWith(".xml"));
+    if (!sheetKey) throw new Error("هیچ شیتی در فایل اکسل پیدا نشد.");
+
+    const wsDoc = parser.parseFromString(entries[sheetKey], "application/xml");
+    const rowNodes = wsDoc.getElementsByTagName("row");
+    const lines = [];
+
+    for (let r = 0; r < rowNodes.length; r++) {
+        const cNodes = rowNodes[r].getElementsByTagName("c");
+        const rowCells = [];
+        for (let c = 0; c < cNodes.length; c++) {
+            const cell = cNodes[c];
+            const type = cell.getAttribute("t") || "";
+            let val = "";
+            if (type === "inlineStr") {
+                const tEls = cell.getElementsByTagName("t");
+                for (let k = 0; k < tEls.length; k++) val += tEls[k].textContent || "";
+            } else {
+                const vEl = cell.getElementsByTagName("v")[0];
+                if (vEl) {
+                    const rawV = vEl.textContent || "";
+                    val = type === "s" ? (sharedStrings[parseInt(rawV, 10)] ?? "") : rawV;
+                }
+            }
+            if (String(val).trim()) rowCells.push(String(val).trim());
+        }
+        if (rowCells.length) lines.push(rowCells.join(" "));
+    }
+    return lines;
+}
+
+function xmlEscape(str) {
+    return String(str ?? "")
+        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+}
+
+function colIndexToLetter(idx0) {
+    let n = idx0 + 1;
+    let s = "";
+    while (n > 0) {
+        const m = (n - 1) % 26;
+        s = String.fromCharCode(65 + m) + s;
+        n = Math.floor((n - 1) / 26);
+    }
+    return s;
+}
+
+function generateStyledXlsxBlob(records, layout = "full") {
+    let headers, widths;
+    if (layout === "classic") {
+        headers = [
+            "ردیف",
+            "لوکیشن جستجوشده",
+            "نام فروشگاه/محل",
+            "آدرس",
+            "شماره موبایل",
+            "شماره تلفن ثابت",
+            "لینک گوگل مپ"
+        ];
+        widths = [8, 34, 30, 48, 20, 20, 44];
+    } else {
+        headers = [
+            "ردیف",
+            "لوکیشن جستجوشده",
+            "نام فروشگاه/محل",
+            "دسته‌بندی کسب‌وکار",
+            "شماره موبایل",
+            "شماره تلفن ثابت",
+            "آدرس",
+            "وب‌سایت",
+            "امتیاز",
+            "تعداد نظرات",
+            "مختصات (Lat, Lng)",
+            "لینک گوگل مپ"
+        ];
+        widths = [8, 32, 30, 22, 20, 20, 48, 28, 10, 12, 24, 44];
+    }
+
+    const colsXml = widths
+        .map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`)
+        .join("");
+
+    const sheetRows = [];
+    // ردیف هدر (استایل 1 = نارنجی بولد سفید وسط‌چین)
+    const headerCells = headers.map((h, cIdx) => {
+        const ref = `${colIndexToLetter(cIdx)}1`;
+        return `<c r="${ref}" s="1" t="inlineStr"><is><t xml:space="preserve">${xmlEscape(h)}</t></is></c>`;
+    }).join("");
+    sheetRows.push(`<row r="1" ht="26" customHeight="1">${headerCells}</row>`);
+
+    for (let i = 0; i < records.length; i++) {
+        const r = records[i];
+        const rowNum = i + 2;
+        const styleIdx = (i % 2 === 1) ? 3 : 2;
+        const mobs = (r.mobiles || []).join("، ");
+        const lands = (r.landlines || []).join("، ");
+        const coords = (r.lat && r.lng) ? `${r.lat}, ${r.lng}` : "";
+
+        const vals = layout === "classic"
+            ? [i + 1, r.location || "", r.name || "", r.address || "", mobs, lands, r.url || ""]
+            : [
+                i + 1, r.location || "", r.name || "", r.category || "",
+                mobs, lands, r.address || "", r.website || "",
+                r.rating || "", r.reviews || "", coords, r.url || ""
+            ];
+
+        const cellsXml = vals.map((v, cIdx) => {
+            const ref = `${colIndexToLetter(cIdx)}${rowNum}`;
+            if (cIdx === 0 && typeof v === "number") {
+                return `<c r="${ref}" s="${styleIdx}" t="n"><v>${v}</v></c>`;
+            }
+            return `<c r="${ref}" s="${styleIdx}" t="inlineStr"><is><t xml:space="preserve">${xmlEscape(v)}</t></is></c>`;
+        }).join("");
+
+        sheetRows.push(`<row r="${rowNum}">${cellsXml}</row>`);
+    }
+
+    const stylesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <fonts count="2">
+    <font><sz val="10"/><name val="Tahoma"/></font>
+    <font><b/><sz val="10"/><color rgb="FFFFFFFF"/><name val="Tahoma"/></font>
+  </fonts>
+  <fills count="4">
+    <fill><patternFill patternType="none"/></fill>
+    <fill><patternFill patternType="gray125"/></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFEA580C"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFFFF8F3"/></patternFill></fill>
+  </fills>
+  <borders count="2">
+    <border><left/><right/><top/><bottom/><diagonal/></border>
+    <border>
+      <left style="thin"><color rgb="FFE5E7EB"/></left>
+      <right style="thin"><color rgb="FFE5E7EB"/></right>
+      <top style="thin"><color rgb="FFE5E7EB"/></top>
+      <bottom style="thin"><color rgb="FFE5E7EB"/></bottom>
+      <diagonal/>
+    </border>
+  </borders>
+  <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
+  <cellXfs count="4">
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
+    <xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1">
+      <alignment horizontal="center" vertical="center"/>
+    </xf>
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1" applyAlignment="1">
+      <alignment horizontal="right" vertical="center"/>
+    </xf>
+    <xf numFmtId="0" fontId="0" fillId="3" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1">
+      <alignment horizontal="right" vertical="center"/>
+    </xf>
+  </cellXfs>
+  <cellStyles count="1">
+    <cellStyle name="Normal" xfId="0" builtinId="0"/>
+  </cellStyles>
+</styleSheet>`;
+
+    const sheetXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <sheetViews>
+    <sheetView tabSelected="1" rightToLeft="1" workbookViewId="0">
+      <pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/>
+    </sheetView>
+  </sheetViews>
+  <cols>${colsXml}</cols>
+  <sheetData>${sheetRows.join("")}</sheetData>
+</worksheet>`;
+
+    const workbookXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <sheets>
+    <sheet name="نتایج" sheetId="1" r:id="rId1"/>
+  </sheets>
+</workbook>`;
+
+    const workbookRelsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
+  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+</Relationships>`;
+
+    const rootRelsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
+</Relationships>`;
+
+    const contentTypesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+  <Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+  <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
+</Types>`;
+
+    return buildStoredZipBlob({
+        "[Content_Types].xml": contentTypesXml,
+        "_rels/.rels": rootRelsXml,
+        "xl/workbook.xml": workbookXml,
+        "xl/_rels/workbook.xml.rels": workbookRelsXml,
+        "xl/styles.xml": stylesXml,
+        "xl/worksheets/sheet1.xml": sheetXml
+    });
+}
+
+function generateCsvBlob(records, layout = "full") {
+    const csvEscape = (v) => {
+        const s = String(v ?? "");
+        return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const lines = [];
+    if (layout === "classic") {
+        lines.push(["ردیف","لوکیشن جستجوشده","نام فروشگاه/محل","آدرس","شماره موبایل","شماره تلفن ثابت","لینک گوگل مپ"].map(csvEscape).join(","));
+        records.forEach((r, i) => {
+            lines.push([
+                i + 1, r.location || "", r.name || "", r.address || "",
+                (r.mobiles || []).join("، "), (r.landlines || []).join("، "), r.url || ""
+            ].map(csvEscape).join(","));
+        });
+    } else {
+        lines.push(["ردیف","لوکیشن جستجوشده","نام فروشگاه/محل","دسته‌بندی کسب‌وکار","شماره موبایل","شماره تلفن ثابت","آدرس","وب‌سایت","امتیاز","تعداد نظرات","مختصات (Lat, Lng)","لینک گوگل مپ"].map(csvEscape).join(","));
+        records.forEach((r, i) => {
+            const coords = (r.lat && r.lng) ? `${r.lat}, ${r.lng}` : "";
+            lines.push([
+                i + 1, r.location || "", r.name || "", r.category || "",
+                (r.mobiles || []).join("، "), (r.landlines || []).join("، "),
+                r.address || "", r.website || "", r.rating || "", r.reviews || "",
+                coords, r.url || ""
+            ].map(csvEscape).join(","));
+        });
+    }
+    return new Blob(["\uFEFF" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+}
+
+function triggerBlobDownload(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }, 1500);
+}
+
+// ============================================================================
+// ۴. موتور ارتباطی و پارسر ساختاریافتهٔ نتایج Google Maps (tbm=map JSON)
+// ============================================================================
+
+let hasLocalServerRelay = false;
+
+async function detectLocalRelay() {
+    if (!location.protocol.startsWith("http")) return false;
+    try {
+        const ctrl = new AbortController();
+        const t = setTimeout(() => ctrl.abort(), 1800);
+        const r = await fetch("/api/proxy?ping=1", { signal: ctrl.signal });
+        clearTimeout(t);
+        if (r.ok) {
+            const j = await r.json();
+            if (j && j.ok) {
+                hasLocalServerRelay = true;
+                $("engineModeTag").textContent = "موتور: سرور مستقیم محلی (پرشتاب)";
+                return true;
+            }
+        }
+    } catch (_e) {}
+    return false;
+}
+
+const VIEWPORT_PROFILES = [
+    [1366, 900, "5.1"],
+    [1440, 900, "5.2"],
+    [1536, 864, "5.1"],
+    [1920, 1080, "5.3"],
+    [1280, 800, "5.0"],
+    [1600, 900, "5.2"]
+];
+let gatewayRoundRobinIdx = 0;
+
+function humanizeDelayMs(baseMs) {
+    // مکث تصادفی طبیعی انسانی بین ۸۵٪ تا ۱۳۰٪ مقدار پایه برای جلوگیری از الگوی ربات‌گونه
+    return Math.round(baseMs * (0.85 + Math.random() * 0.45));
+}
+
+function buildGoogleMapsBatchUrl(query, startOffset, profileIdx = 0) {
+    const [vw, vh, zf] = VIEWPORT_PROFILES[profileIdx % VIEWPORT_PROFILES.length];
+    const pb = `!4m12!1m3!1d15000000!2d53.688!3d32.427!2m3!1f0!2f0!3f0!3m2!1i${vw}!2i${vh}!4f${zf}!7i20!8i${startOffset}!10b1`;
+    return `https://www.google.com/search?tbm=map&authuser=0&hl=fa&gl=ir&q=${encodeURIComponent(query)}&pb=${encodeURIComponent(pb).replace(/%21/g, "!")}`;
+}
+
+function isCaptchaPayload(text) {
+    if (!text) return false;
+    return (
+        text.includes("unusual traffic from your computer network") ||
+        text.includes("our systems have detected unusual traffic") ||
+        text.includes("/sorry/index") ||
+        text.includes("g-recaptcha") ||
+        text.includes("به نظر می‌رسد که فعالیت غیرمعمولی")
+    );
+}
+
+async function fetchMapsPayloadWithRetry(queryOrUrl, startOffsetOrAdv, advConfigMaybe, logFnMaybe, isStoppedFnMaybe) {
+    // پشتیبانی همزمان از فراخوانی (query, startOffset, advConfig, logFn, isStoppedFn) و فراخوانی مستقیم با URL
+    let baseQuery = null;
+    let startOffset = 0;
+    let fixedUrl = null;
+    let advConfig, logFn, isStoppedFn;
+
+    if (typeof startOffsetOrAdv === "number") {
+        baseQuery = queryOrUrl;
+        startOffset = startOffsetOrAdv;
+        advConfig = advConfigMaybe || {};
+        logFn = logFnMaybe;
+        isStoppedFn = isStoppedFnMaybe;
+    } else {
+        fixedUrl = queryOrUrl;
+        advConfig = startOffsetOrAdv || {};
+        logFn = advConfigMaybe;
+        isStoppedFn = logFnMaybe;
+    }
+
+    const customList = String(advConfig.customProxyUrl || "")
+        .split(/\r?\n/)
+        .map(s => s.trim())
+        .filter(Boolean);
+    const jinaKey = (advConfig.jinaApiKey || "").trim();
+
+    // ساخت لیست درگاه‌های چرخشی (درگاه‌های اختصاصی + سرور محلی در صورت وجود + درگاه ابری پیش‌فرض)
+    const gateways = [];
+    for (const cp of customList) {
+        gateways.push({
+            label: "ورکر اختصاصی",
+            makeReq: (u) => ({
+                url: cp.includes("?") ? `${cp}${encodeURIComponent(u)}` : `${cp.replace(/\/+$/, "")}/?url=${encodeURIComponent(u)}`,
+                headers: undefined
+            })
+        });
+    }
+    if (hasLocalServerRelay) {
+        gateways.push({
+            label: "سرور مستقیم محلی",
+            makeReq: (u) => ({ url: `/api/proxy?url=${encodeURIComponent(u)}`, headers: undefined })
+        });
+    }
+    gateways.push({
+        label: "درگاه ابری چرخشی",
+        makeReq: (u) => ({
+            url: `https://r.jina.ai/${u}`,
+            headers: jinaKey ? { "Authorization": `Bearer ${jinaKey}` } : undefined
+        })
+    });
+
+    // جدول خنک‌سازی پلکانی سپر خودترمیم ضدکپچا (بدون توقف شبانهٔ کار)
+    const captchaCooldownSec = [2.5, 15, 35, 70, 130];
+    const maxAttempts = 6;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        if (isStoppedFn && isStoppedFn()) throw new Error("STOPPED");
+
+        // هر تلاش از پروفایل ابعاد متفاوت (برای عبور از کش و نود خروجی تازه) + درگاه بعدی در چرخه استفاده می‌کند
+        const profileIdx = (gatewayRoundRobinIdx + attempt - 1) % VIEWPORT_PROFILES.length;
+        const gw = gateways[(gatewayRoundRobinIdx++) % gateways.length];
+        const targetGoogleUrl = fixedUrl || buildGoogleMapsBatchUrl(baseQuery, startOffset, profileIdx);
+        const reqSpec = gw.makeReq(targetGoogleUrl);
+
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 32000);
+        try {
+            const resp = await fetch(reqSpec.url, {
+                method: "GET",
+                headers: reqSpec.headers,
+                signal: ctrl.signal
+            });
+            clearTimeout(timer);
+
+            if (resp.status === 429) {
+                const waitSec = gateways.length > 1 && attempt < gateways.length ? 0.4 : 8 * attempt;
+                if (logFn) logFn(`⏳ محدودیت نرخ درخواست (۴۲۹) روی ${gw.label}؛ سوئیچ خودکار به درگاه سالم بعدی...`);
+                await sleepInterruptible(waitSec * 1000, isStoppedFn);
+                continue;
+            }
+            if (!resp.ok) {
+                throw new Error(`پاسخ نامعتبر شبکه (HTTP ${resp.status})`);
+            }
+            const text = await resp.text();
+            if (isCaptchaPayload(text)) {
+                if (attempt < maxAttempts) {
+                    const coolSec = captchaCooldownSec[Math.min(attempt - 1, captchaCooldownSec.length - 1)];
+                    if (logFn) {
+                        logFn(`🛡️ سپر ضدکپچا (مرحله ${persianDigits(attempt)}/${persianDigits(maxAttempts - 1)}): تغییر امضای مرورگر و نود خروجی + صبر هوشمند ${persianDigits(coolSec)} ثانیه برای ادامهٔ خودکار...`);
+                    }
+                    await sleepInterruptible(coolSec * 1000, isStoppedFn);
+                    continue;
+                }
+                throw new Error("گوگل موقتاً درخواست‌ها را با کپچا محدود کرده است. تمام نتایج قبلی ذخیره شده‌اند؛ چند دقیقه مکث کرده یا آی‌پی فیلترشکن را عوض کنید و «ادامهٔ کار قبلی» را بزنید.");
+            }
+            return text;
+        } catch (err) {
+            clearTimeout(timer);
+            if (String(err.message) === "STOPPED") throw err;
+            if (String(err.message).includes("کپچا")) throw err;
+            if (attempt < maxAttempts) {
+                const waitSec = 4 * attempt;
+                if (logFn) logFn(`⚠️ اختلال لحظه‌ای شبکه (تلاش ${persianDigits(attempt)}/${persianDigits(maxAttempts)})؛ تلاش دوباره تا ${persianDigits(waitSec)} ثانیه دیگر...`);
+                await sleepInterruptible(waitSec * 1000, isStoppedFn);
+                continue;
+            }
+            throw err;
+        }
+    }
+    throw new Error("عدم دریافت پاسخ پس از چند تلاش متوالی.");
+}
+
+function extractRootJsonArraySlice(text) {
+    const markerIdx = text.indexOf(")]}'");
+    const searchStart = markerIdx >= 0 ? markerIdx + 4 : 0;
+    const firstBracket = text.indexOf("[", searchStart);
+    if (firstBracket < 0) return null;
+
+    let depth = 0;
+    let inStr = false;
+    let esc = false;
+    for (let i = firstBracket; i < text.length; i++) {
+        const ch = text[i];
+        if (esc) { esc = false; continue; }
+        if (ch === "\\") { if (inStr) esc = true; continue; }
+        if (ch === '"') { inStr = !inStr; continue; }
+        if (!inStr) {
+            if (ch === "[") depth++;
+            else if (ch === "]") {
+                depth--;
+                if (depth === 0) return text.slice(firstBracket, i + 1);
+            }
+        }
+    }
+    return text.slice(firstBracket);
+}
+
+function collectStringsRecursive(node, predicate, out) {
+    if (!node) return;
+    if (typeof node === "string") {
+        if (predicate(node)) out.push(node);
+    } else if (Array.isArray(node)) {
+        for (let i = 0; i < node.length; i++) {
+            collectStringsRecursive(node[i], predicate, out);
+        }
+    }
+}
+
+function unwrapGoogleRedirectUrl(rawUrl) {
+    if (!rawUrl || typeof rawUrl !== "string") return "";
+    if (rawUrl.startsWith("/url?")) {
+        try {
+            return new URL("https://www.google.com" + rawUrl).searchParams.get("q") || rawUrl;
+        } catch (_e) {
+            return rawUrl;
+        }
+    }
+    return rawUrl;
+}
+
+function parseGoogleMapsTbmResponse(rawText) {
+    const jsonSlice = extractRootJsonArraySlice(rawText);
+    if (!jsonSlice) return [];
+
+    const root = JSON.parse(jsonSlice);
+    const wrappers = (Array.isArray(root) && Array.isArray(root[0]) && Array.isArray(root[0][1]))
+        ? root[0][1]
+        : [];
+
+    const parsedItems = [];
+    for (const w of wrappers) {
+        const el = (Array.isArray(w) && w.length > 14 && Array.isArray(w[14])) ? w[14] : null;
+        if (!el) continue;
+
+        const name = cleanDisplayText(typeof el[11] === "string" ? el[11] : "");
+        if (!name) continue;
+
+        let placeId = typeof el[10] === "string" && el[10].includes("0x") ? el[10].toLowerCase() : "";
+        if (!placeId) {
+            const hexFound = [];
+            collectStringsRecursive(el, s => /^0x[0-9a-f]+:0x[0-9a-f]+$/i.test(s), hexFound);
+            if (hexFound.length) placeId = hexFound[0].toLowerCase();
+        }
+
+        let chijId = (el.length > 78 && typeof el[78] === "string" && el[78].startsWith("ChIJ")) ? el[78] : "";
+        if (!chijId) {
+            const chijFound = [];
+            collectStringsRecursive(el, s => /^ChIJ[A-Za-z0-9_-]{10,}$/.test(s), chijFound);
+            if (chijFound.length) chijId = chijFound[0];
+        }
+
+        const category = Array.isArray(el[13]) ? cleanDisplayText(el[13].join("، ")) : "";
+
+        const rawAddr = (typeof el[39] === "string" && el[39].trim())
+            ? el[39]
+            : (typeof el[18] === "string" && el[18].trim())
+                ? el[18]
+                : Array.isArray(el[2]) ? el[2].join("، ") : "";
+        const address = cleanDisplayText(rawAddr);
+
+        // استخراج تمامی شماره‌های موبایل و تلفن ثابت از ساختار داخلی + URI های استاندارد tel:
+        const rawPhones = [];
+        if (el.length > 178 && Array.isArray(el[178])) {
+            for (const pEntry of el[178]) {
+                if (Array.isArray(pEntry) && typeof pEntry[0] === "string") rawPhones.push(pEntry[0]);
+            }
+        }
+        const telUris = [];
+        collectStringsRecursive(el, s => s.startsWith("tel:"), telUris);
+        for (const t of telUris) rawPhones.push(t.slice(4));
+
+        const mobiles = [];
+        const landlines = [];
+        for (const rp of rawPhones) {
+            const norm = normalizePhone(rp);
+            if (!norm) continue;
+            if (norm.kind === "mobile") {
+                if (!mobiles.includes(norm.number)) mobiles.push(norm.number);
+            } else {
+                if (!landlines.includes(norm.number)) landlines.push(norm.number);
+            }
+        }
+
+        let website = "";
+        if (Array.isArray(el[7]) && typeof el[7][0] === "string") {
+            website = unwrapGoogleRedirectUrl(el[7][0]);
+        }
+
+        let rating = "";
+        let reviews = "";
+        if (Array.isArray(el[4])) {
+            if (el[4][7] != null) rating = String(el[4][7]);
+            if (el[4][8] != null) reviews = String(el[4][8]);
+        }
+
+        let lat = "", lng = "";
+        if (Array.isArray(el[9]) && typeof el[9][2] === "number" && typeof el[9][3] === "number") {
+            lat = String(el[9][2]);
+            lng = String(el[9][3]);
+        }
+
+        let mapUrl = "";
+        if (placeId && lat && lng) {
+            const chijPart = chijId ? `!19s${chijId}` : "";
+            mapUrl = `https://www.google.com/maps/place/${encodeURIComponent(name)}/data=!4m7!3m6!1s${placeId}!8m2!3d${lat}!4d${lng}${chijPart}?hl=fa`;
+        } else if (chijId) {
+            mapUrl = `https://www.google.com/maps/place/?q=place_id:${chijId}`;
+        } else if (lat && lng) {
+            mapUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+        }
+
+        parsedItems.push({
+            place_id: placeId || chijId || `${name}_${lat}_${lng}`,
+            name,
+            category,
+            address,
+            mobiles,
+            landlines,
+            website,
+            rating,
+            reviews,
+            lat,
+            lng,
+            url: mapUrl
+        });
+    }
+    return parsedItems;
+}
+
+// ============================================================================
+// ۵. کنترل وضعیت، رابط کاربری، توقف/ادامه و Wake Lock جلوگیری از خواب صفحه
+// ============================================================================
+
+const storage = new BrowserStorage();
+let isRunning = false;
+let stopRequested = false;
+let wakeLockHandle = null;
+
+let jobState = {
+    current_index: -1,
+    total_locations: 0,
+    keyword: "",
+    active_location: "",
+    error: null
+};
+
+let settingsState = {
+    keywords: [],
+    locations: [],
+    location_file_basename: "",
+    max_results: 120,
+    page_delay: 3.2,
+    loc_delay: 3.5,
+    custom_proxy_url: "",
+    jina_api_key: ""
+};
+
+function appendLog(msg) {
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2, "0");
+    const mm = String(now.getMinutes()).padStart(2, "0");
+    const ss = String(now.getSeconds()).padStart(2, "0");
+    const box = $("logBox");
+    if (box.textContent === "آماده برای شروع استخراج...") box.textContent = "";
+    box.textContent += `[${hh}:${mm}:${ss}] ${msg}\n`;
+    if ($("autoScrollChk").checked) {
+        box.scrollTop = box.scrollHeight;
+    }
+}
+
+function sleepInterruptible(ms, isStoppedFn) {
+    return new Promise((resolve) => {
+        const end = Date.now() + ms;
+        const tick = () => {
+            if ((isStoppedFn && isStoppedFn()) || Date.now() >= end) {
+                resolve();
+                return;
+            }
+            setTimeout(tick, Math.min(200, end - Date.now()));
+        };
+        tick();
+    });
+}
+
+let keepAliveAudioCtx = null;
+
+async function acquireWakeLock() {
+    try {
+        if ("wakeLock" in navigator) {
+            wakeLockHandle = await navigator.wakeLock.request("screen");
+        }
+    } catch (_e) {}
+    // جلوگیری از به خواب رفتن یا کند شدن تب‌های پس‌زمینه در کروم هنگام اجرای همزمان چند استان
+    try {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (Ctx && !keepAliveAudioCtx) {
+            keepAliveAudioCtx = new Ctx();
+            const osc = keepAliveAudioCtx.createOscillator();
+            const gain = keepAliveAudioCtx.createGain();
+            gain.gain.value = 0.00001; // کاملاً بی‌صدا اما مانع Throttling تب پس‌زمینه
+            osc.connect(gain);
+            gain.connect(keepAliveAudioCtx.destination);
+            osc.start();
+        }
+        if (keepAliveAudioCtx && keepAliveAudioCtx.state === "suspended") {
+            await keepAliveAudioCtx.resume();
+        }
+    } catch (_e) {}
+}
+
+function releaseWakeLock() {
+    if (wakeLockHandle) {
+        try { wakeLockHandle.release(); } catch (_e) {}
+        wakeLockHandle = null;
+    }
+    if (keepAliveAudioCtx) {
+        try { keepAliveAudioCtx.close(); } catch (_e) {}
+        keepAliveAudioCtx = null;
+    }
+}
+
+function updateInputCounters() {
+    const kwLen = getKeywordsFromBox().length;
+    const locLen = getLocationsFromBox().length;
+    $("kwCountTag").textContent = `${persianDigits(kwLen)} / ${persianDigits(MAX_KEYWORDS)}`;
+    $("kwCountTag").style.color = kwLen > MAX_KEYWORDS ? "#b91c1c" : "#9a3412";
+    $("locCountTag").textContent = `${persianDigits(locLen)} لوکیشن`;
+}
+
+function updateFileBadge(basename) {
+    const el = $("fileNameBadge");
+    if (basename) {
+        el.style.display = "inline-block";
+        el.textContent = `خروجی: ${basename}_نتایج.xlsx`;
+    } else {
+        el.style.display = "none";
+        el.textContent = "";
+    }
+}
+
+function renderStatusUI() {
+    const badge = $("statusBadge");
+    if (jobState.error) {
+        badge.textContent = "خطا / متوقف‌شده";
+        badge.className = "badge error";
+        $("errorBox").style.display = "block";
+        $("errorBox").textContent = jobState.error;
+    } else if (isRunning && stopRequested) {
+        badge.textContent = "در حال توقف ایمن...";
+        badge.className = "badge stopping";
+        $("errorBox").style.display = "none";
+    } else if (isRunning) {
+        badge.textContent = "در حال استخراج زنده...";
+        badge.className = "badge running";
+        $("errorBox").style.display = "none";
+    } else {
+        badge.textContent = "آماده به کار";
+        badge.className = "badge idle";
+        $("errorBox").style.display = "none";
+    }
+
+    $("startFreshBtn").disabled = isRunning;
+    $("resumeBtn").disabled = isRunning;
+    $("stopBtn").disabled = !isRunning;
+
+    const done = Math.max(0, (jobState.current_index ?? -1) + 1);
+    const total = jobState.total_locations || 0;
+    const pct = total > 0 ? Math.min(100, Math.round((done / total) * 100)) : 0;
+
+    $("statLoc").textContent = `${persianDigits(done)} / ${persianDigits(total)}`;
+    $("statResults").textContent = persianDigits(storage.records.length);
+    $("statMobiles").textContent = persianDigits(storage.mobileCount);
+    $("statPhones").textContent = persianDigits(storage.phoneCount);
+    $("statPct").textContent = `${persianDigits(pct)}٪`;
+    $("progressBar").style.width = pct + "%";
+    $("tableCountBadge").textContent = `${persianDigits(storage.records.length)} رکورد یکتا`;
+
+    if (jobState.active_location && isRunning) {
+        $("activeLocBox").textContent = `📍 در حال بررسی: ${jobState.active_location}`;
+    } else if (total > 0 && done >= total) {
+        $("activeLocBox").textContent = `✅ استخراج تمامی ${persianDigits(total)} لوکیشن با موفقیت کامل شد.`;
+    } else if (done > 0 && total > done) {
+        $("activeLocBox").textContent = `⏸️ متوقف در لوکیشن ${persianDigits(done)} از ${persianDigits(total)} — آمادهٔ «ادامهٔ کار قبلی»`;
+    } else {
+        $("activeLocBox").textContent = "لوکیشن فعال: —";
+    }
+
+    const customProxy = ($("customProxyUrl").value || "").trim();
+    if (customProxy) {
+        $("engineModeTag").textContent = "موتور: ورکر اختصاصی پرسرعت";
+    } else if (hasLocalServerRelay) {
+        $("engineModeTag").textContent = "موتور: سرور مستقیم محلی";
+    } else {
+        $("engineModeTag").textContent = "موتور: خودکار بدون سرور (Direct CORS)";
+    }
+}
+
+function renderPreviewTable() {
+    const q = $("previewSearch").value.trim();
+    const rows = storage.searchRecent(q, 60);
+    const tbody = $("previewBody");
+    if (!rows.length) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#888;padding:18px;">${
+            q ? "هیچ کسب‌وکاری مطابق عبارت جستجو پیدا نشد." : "هنوز نتیجه‌ای ثبت نشده است."
+        }</td></tr>`;
+        return;
+    }
+    tbody.innerHTML = rows.map(r => {
+        const mobs = (r.mobiles || []).map(m => `<span class="phone-chip">📱 ${escapeHtml(m)}</span>`).join(" ");
+        const lands = (r.landlines || []).map(l => `<span class="land-chip">☎️ ${escapeHtml(l)}</span>`).join(" ");
+        const phones = (mobs || lands) ? `${mobs} ${lands}` : `<span style="color:#9ca3af;">—</span>`;
+        const titleHtml = r.url
+            ? `<a href="${escapeHtml(r.url)}" target="_blank" rel="noopener" style="color:#9a3412;font-weight:700;text-decoration:none;">${escapeHtml(r.name)} ↗</a>`
+            : `<b>${escapeHtml(r.name)}</b>`;
+        const ratingHtml = r.rating
+            ? `⭐ ${persianDigits(r.rating)}${r.reviews ? ` <span style="color:#6b7280;font-size:11px;">(${persianDigits(r.reviews)})</span>` : ""}`
+            : "—";
+        return `<tr>
+            <td>${persianDigits(r.id)}</td>
+            <td>${titleHtml}${r.website ? `<div><a href="${escapeHtml(r.website)}" target="_blank" rel="noopener" style="font-size:11px;color:#1d4ed8;">🌐 وب‌سایت</a></div>` : ""}</td>
+            <td>${escapeHtml(r.category || "—")}</td>
+            <td>${phones}</td>
+            <td><div style="font-weight:700;color:#374151;">${escapeHtml(r.location || "")}</div><div style="color:#6b7280;font-size:11px;">${escapeHtml(r.address || "")}</div></td>
+            <td>${ratingHtml}</td>
+        </tr>`;
+    }).join("");
+}
+
+function getKeywordsFromBox() {
+    return $("keywords").value.split("\n").map(s => s.trim()).filter(Boolean);
+}
+
+function getLocationsFromBox() {
+    return $("locations").value.split("\n").map(s => s.trim()).filter(Boolean);
+}
+
+async function persistSettingsFromUI() {
+    settingsState.keywords = getKeywordsFromBox().slice(0, MAX_KEYWORDS);
+    settingsState.locations = optimizeLocations(getLocationsFromBox());
+    settingsState.max_results = Math.max(1, parseInt($("maxResults").value || "120", 10));
+    settingsState.page_delay = Math.max(0.5, parseFloat($("pageDelay").value || "3.2"));
+    settingsState.loc_delay = Math.max(0.5, parseFloat($("locDelay").value || "3.5"));
+    settingsState.dedup_by_phone = !!$("dedupPhoneChk").checked;
+    settingsState.custom_proxy_url = ($("customProxyUrl").value || "").trim();
+    settingsState.jina_api_key = ($("jinaApiKey").value || "").trim();
+    await storage.setKV("settings", settingsState);
+}
+
+// ============================================================================
+// ۶. اجرای اصلی استخراج چندشهری و چندصفحه‌ای گوگل مپ در مرورگر
+// ============================================================================
+
+async function runExtractionJob(resume) {
+    const keywords = getKeywordsFromBox();
+    const locations = optimizeLocations(getLocationsFromBox());
+
+    if (!keywords.length) { alert("لطفاً حداقل یک کلمهٔ کلیدی وارد کنید."); return; }
+    if (keywords.length > MAX_KEYWORDS) {
+        alert(`حداکثر ${persianDigits(MAX_KEYWORDS)} کلمهٔ کلیدی مجاز است.`);
+        return;
+    }
+    if (!locations.length) { alert("لطفاً حداقل یک لوکیشن وارد کنید."); return; }
+
+    if (!resume && storage.records.length > 0) {
+        const ok = confirm(
+            `هم‌اکنون ${persianDigits(storage.records.length)} کسب‌وکار از قبل ذخیره شده است.\n` +
+            `با زدن «شروع از ابتدا»، نتایج قبلی پاک شده و کار از صفر آغاز می‌شود.\n` +
+            `آیا مطمئن هستید؟`
+        );
+        if (!ok) return;
+    }
+
+    $("locations").value = locations.join("\n");
+    updateInputCounters();
+    await persistSettingsFromUI();
+
+    const searchKeyword = buildSearchKeyword(keywords);
+    const maxPerLocation = settingsState.max_results;
+    const pageDelayMs = settingsState.page_delay * 1000;
+    const locDelayMs = settingsState.loc_delay * 1000;
+    const advConfig = {
+        customProxyUrl: settingsState.custom_proxy_url,
+        jinaApiKey: settingsState.jina_api_key
+    };
+
+    isRunning = true;
+    stopRequested = false;
+    jobState.error = null;
+    jobState.keyword = searchKeyword;
+    jobState.total_locations = locations.length;
+
+    let startIndex = 0;
+    if (resume) {
+        startIndex = Math.max(0, (jobState.current_index ?? -1) + 1);
+    } else {
+        jobState.current_index = -1;
+        $("logBox").textContent = "";
+        await storage.clearResultsOnly();
+    }
+    await storage.setKV("jobState", jobState);
+
+    renderStatusUI();
+    renderPreviewTable();
+    await acquireWakeLock();
+
+    appendLog(`🚀 شروع استخراج | عبارت: «${searchKeyword}» | تعداد لوکیشن‌ها: ${persianDigits(locations.length)} | حالت: ${resume ? "ادامهٔ کار قبلی" : "شروع از ابتدا"}`);
+
+    if (resume && startIndex >= locations.length) {
+        appendLog("ℹ️ تمامی لوکیشن‌های این لیست قبلاً به پایان رسیده‌اند. برای اجرای مجدد از صفر، «شروع از ابتدا» را بزنید.");
+    }
+
+    try {
+        for (let idx = startIndex; idx < locations.length; idx++) {
+            if (stopRequested) break;
+
+            const loc = locations[idx];
+            const fullQuery = `${loc} ${searchKeyword}`.trim();
+            jobState.active_location = `(${persianDigits(idx + 1)}/${persianDigits(locations.length)}) ${loc}`;
+            renderStatusUI();
+
+            appendLog(`═══ لوکیشن ${persianDigits(idx + 1)} از ${persianDigits(locations.length)}: ${loc} ═══`);
+
+            let collectedInLoc = 0;
+            let addedInLoc = 0;
+            let skippedDupInLoc = 0;
+            const seenInThisLoc = new Set();
+
+            for (let offset = 0; offset < maxPerLocation; offset += 20) {
+                if (stopRequested) break;
+
+                const rawText = await fetchMapsPayloadWithRetry(
+                    fullQuery,
+                    offset,
+                    advConfig,
+                    appendLog,
+                    () => stopRequested
+                );
+
+                const pageItems = parseGoogleMapsTbmResponse(rawText);
+                if (!pageItems.length) {
+                    if (offset === 0) {
+                        appendLog(`  نتیجه‌ای در گوگل مپ برای «${loc}» یافت نشد.`);
+                    } else {
+                        appendLog(`  به انتهای فهرست نتایج گوگل مپ رسیدیم.`);
+                    }
+                    break;
+                }
+
+                let freshInQueryPage = 0;
+                for (const item of pageItems) {
+                    if (collectedInLoc >= maxPerLocation) break;
+                    if (!seenInThisLoc.has(item.place_id)) {
+                        seenInThisLoc.add(item.place_id);
+                        freshInQueryPage++;
+                    }
+                    collectedInLoc++;
+                    item.location = loc;
+                    item.query = fullQuery;
+
+                    const added = await storage.addResult(item, !!settingsState.dedup_by_phone);
+                    if (added) {
+                        addedInLoc++;
+                        const phoneTag = item.mobiles.length
+                            ? ` | 📱 ${item.mobiles.join("، ")}`
+                            : (item.landlines.length ? ` | ☎️ ${item.landlines.join("، ")}` : "");
+                        appendLog(`  [${persianDigits(storage.records.length)}] ✅ ${item.name}${phoneTag}`);
+                    } else {
+                        skippedDupInLoc++;
+                    }
+                }
+
+                renderStatusUI();
+                renderPreviewTable();
+
+                // اگر تعداد آیتم‌های صفحه کمتر از ۱۸ بود یا گوگل همان صفحه قبلی را تکرار کرد، لیست گوگل تمام شده است
+                if (pageItems.length < 18 || (freshInQueryPage === 0 && offset > 0) || collectedInLoc >= maxPerLocation) {
+                    break;
+                }
+
+                await sleepInterruptible(humanizeDelayMs(pageDelayMs), () => stopRequested);
+            }
+
+            if (stopRequested) {
+                appendLog("🛑 عملیات به درخواست شما متوقف شد. پیشرفت تا اینجا ذخیره شده و با «ادامهٔ کار قبلی» قابل ادامه است.");
+                break;
+            }
+
+            const dupNote = skippedDupInLoc > 0 ? ` (${persianDigits(skippedDupInLoc)} تکراری رد شد)` : "";
+            appendLog(`✔️ پایان «${loc}»: ${persianDigits(addedInLoc)} کسب‌وکار جدید ثبت شد${dupNote}.`);
+
+            jobState.current_index = idx;
+            await storage.setKV("jobState", jobState);
+            renderStatusUI();
+
+            if (idx < locations.length - 1) {
+                await sleepInterruptible(humanizeDelayMs(locDelayMs), () => stopRequested);
+            }
+        }
+
+        if (!stopRequested) {
+            appendLog(`🏁 عملیات با موفقیت کامل شد! مجموع کل کسب‌وکارهای یکتا: ${persianDigits(storage.records.length)} (دارای موبایل: ${persianDigits(storage.mobileCount)}).`);
+        }
+    } catch (err) {
+        if (String(err.message) !== "STOPPED") {
+            jobState.error = err.message || String(err);
+            appendLog(`❌ خطا: ${jobState.error}`);
+        }
+    } finally {
+        isRunning = false;
+        stopRequested = false;
+        jobState.active_location = "";
+        releaseWakeLock();
+        await storage.setKV("jobState", jobState);
+        renderStatusUI();
+        renderPreviewTable();
+    }
+}
+
+// ============================================================================
+// ۷. رویدادهای دکمه‌ها (آپلود اکسل، خروجی اکسل/CSV/JSON، تست اتصال، ریست)
+// ============================================================================
+
+$("testConnBtn").addEventListener("click", async () => {
+    const msg = $("connTestMsg");
+    const btn = $("testConnBtn");
+    btn.disabled = true;
+    msg.style.color = "#1d4ed8";
+    msg.textContent = "⏳ در حال تست زندهٔ ارتباط با سرورهای گوگل مپ...";
+    const t0 = Date.now();
+    try {
+        const testUrl = buildGoogleMapsBatchUrl("یزد لوازم یدکی", 0);
+        const text = await fetchMapsPayloadWithRetry(testUrl, {
+            customProxyUrl: ($("customProxyUrl").value || "").trim(),
+            jinaApiKey: ($("jinaApiKey").value || "").trim()
+        }, null, () => false);
+        const items = parseGoogleMapsTbmResponse(text);
+        const ms = Date.now() - t0;
+        if (items.length > 0) {
+            msg.style.color = "#15803d";
+            msg.textContent = `✅ اتصال کاملاً برقرار و سالم است! (${persianDigits(items.length)} کسب‌وکار نمونه در ${persianDigits((ms / 1000).toFixed(1))} ثانیه دریافت شد).`;
+        } else {
+            msg.style.color = "#b45309";
+            msg.textContent = "⚠️ پاسخ دریافت شد اما لیست خالی بود؛ در صورت تکرار از روشن بودن فیلترشکن یا ورکر کلودفلر اطمینان حاصل کنید.";
+        }
+    } catch (e) {
+        msg.style.color = "#b91c1c";
+        if (IS_SANDBOX_PREVIEW) {
+            msg.textContent = "⚠️ شما داخل پنجرهٔ «پیش‌نمایش آفلاین» کلیک کردید که اینترنتش مسدود است! دکمهٔ «⬇️ ذخیرهٔ همین فایل HTML مستقل روی دستگاه» در نوار نارنجی بالا را بزنید و فایل را مستقیم در کروم باز کنید، یا وارد تب Live Preview شوید.";
+        } else {
+            msg.textContent = `❌ خطا در اتصال: ${e.message || e} (اگر در ایران بدون فیلترشکن هستید، فیلترشکن را روشن کنید یا آدرس Cloudflare Worker بگذارید).`;
+        }
+    } finally {
+        btn.disabled = false;
+    }
+});
+
+$("saveKeywordsBtn").addEventListener("click", async () => {
+    const kws = getKeywordsFromBox();
+    if (kws.length > MAX_KEYWORDS) {
+        $("keywordsMsg").textContent = `❌ حداکثر ${persianDigits(MAX_KEYWORDS)} کلمهٔ کلیدی مجاز است.`;
+        return;
+    }
+    await persistSettingsFromUI();
+    $("keywordsMsg").textContent = `✅ ${persianDigits(kws.length)} کلمهٔ کلیدی در مرورگر ذخیره شد.`;
+});
+
+$("clearKeywordsBtn").addEventListener("click", async () => {
+    if (!confirm("همهٔ کلمات کلیدی پاک شوند؟")) return;
+    $("keywords").value = "";
+    updateInputCounters();
+    await persistSettingsFromUI();
+    $("keywordsMsg").textContent = "کلمات کلیدی پاک شدند.";
+});
+
+$("saveLocationsBtn").addEventListener("click", async () => {
+    const opt = optimizeLocations(getLocationsFromBox());
+    $("locations").value = opt.join("\n");
+    updateInputCounters();
+    await persistSettingsFromUI();
+    $("locationsMsg").textContent = `✅ ${persianDigits(opt.length)} لوکیشن یکتا بهینه‌سازی و ذخیره شد.`;
+});
+
+$("clearLocationsBtn").addEventListener("click", async () => {
+    if (!confirm("همهٔ لوکیشن‌ها پاک شوند؟")) return;
+    $("locations").value = "";
+    settingsState.location_file_basename = "";
+    updateFileBadge("");
+    updateInputCounters();
+    await persistSettingsFromUI();
+    $("locationsMsg").textContent = "لیست لوکیشن‌ها پاک شد.";
+});
+
+async function handleFileUpload(replace) {
+    const fileInput = $("xlsxFile");
+    const msg = $("uploadMsg");
+    if (!fileInput.files || !fileInput.files.length) {
+        msg.textContent = "لطفاً ابتدا یک فایل (.xlsx / .csv / .txt) انتخاب کنید.";
+        return;
+    }
+    const file = fileInput.files[0];
+    const lower = file.name.toLowerCase();
+    msg.textContent = "در حال خواندن و پردازش فایل در مرورگر...";
+
+    try {
+        let extracted = [];
+        if (lower.endsWith(".xlsx") || lower.endsWith(".xlsm")) {
+            const buf = await file.arrayBuffer();
+            extracted = await parseXlsxLocations(buf);
+        } else {
+            const txt = await file.text();
+            if (lower.endsWith(".csv")) {
+                for (const line of txt.split(/\r?\n/)) {
+                    const cleanedLine = line.split(",").map(s => s.replace(/^"|"$/g, "").trim()).filter(Boolean).join(" ");
+                    if (cleanedLine) extracted.push(cleanedLine);
+                }
+            } else {
+                extracted = txt.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+            }
+        }
+
+        const optNew = optimizeLocations(extracted);
+        if (!optNew.length) {
+            msg.textContent = "هیچ ردیف قابل استفاده‌ای در فایل پیدا نشد.";
+            return;
+        }
+
+        const merged = replace
+            ? optNew
+            : optimizeLocations(getLocationsFromBox().concat(optNew));
+
+        const basename = file.name.replace(/\.(xlsx|xlsm|csv|txt)$/i, "").replace(/[\\/:*?"<>|]/g, "_").trim();
+        settingsState.location_file_basename = basename;
+        $("locations").value = merged.join("\n");
+        updateFileBadge(basename);
+        updateInputCounters();
+        await persistSettingsFromUI();
+
+        msg.textContent = `✅ ${persianDigits(optNew.length)} ردیف از فایل خوانده شد (مجموع یکتا: ${persianDigits(merged.length)}) و فایل خروجی با نام «${basename}_نتایج.xlsx» دانلود خواهد شد.`;
+    } catch (e) {
+        msg.textContent = "خطا در خواندن فایل: " + (e.message || e);
+    }
+}
+
+$("uploadAppendBtn").addEventListener("click", () => handleFileUpload(false));
+$("uploadReplaceBtn").addEventListener("click", () => handleFileUpload(true));
+
+$("saveAdvBtn").addEventListener("click", async () => {
+    await persistSettingsFromUI();
+    renderStatusUI();
+    alert("تنظیمات درگاه ارتباطی ذخیره شد.");
+});
+
+$("toggleWorkerCodeBtn").addEventListener("click", () => {
+    const w = $("workerCodeWrap");
+    w.style.display = w.style.display === "none" ? "block" : "none";
+});
+
+$("startFreshBtn").addEventListener("click", () => runExtractionJob(false));
+$("resumeBtn").addEventListener("click", () => runExtractionJob(true));
+$("stopBtn").addEventListener("click", () => {
+    if (!isRunning) return;
+    stopRequested = true;
+    renderStatusUI();
+    appendLog("🛑 درخواست توقف ثبت شد؛ پس از اتمام درخواست جاری متوقف می‌شود...");
+});
+
+$("clearLogBtn").addEventListener("click", () => { $("logBox").textContent = ""; });
+
+function getExportBaseStem(filterMode) {
+    const base = settingsState.location_file_basename || "";
+    const suffix = filterMode === "with_mobile" ? "_موبایل" : (filterMode === "with_phone" ? "_تلفن‌دار" : "");
+    return base ? `${base}_نتایج${suffix}` : `نتایج-استخراج-گوگل-مپ${suffix}`;
+}
+
+$("exportXlsxBtn").addEventListener("click", () => {
+    const layout = $("exportLayout").value;
+    const filter = $("exportFilter").value;
+    const rows = storage.getFilteredResults(filter);
+    if (!rows.length) {
+        alert("هنوز هیچ نتیجه‌ای مطابق فیلتر انتخابی برای خروجی اکسل وجود ندارد.");
+        return;
+    }
+    const blob = generateStyledXlsxBlob(rows, layout);
+    triggerBlobDownload(blob, `${getExportBaseStem(filter)}.xlsx`);
+});
+
+$("exportCsvBtn").addEventListener("click", () => {
+    const layout = $("exportLayout").value;
+    const filter = $("exportFilter").value;
+    const rows = storage.getFilteredResults(filter);
+    if (!rows.length) {
+        alert("هنوز هیچ نتیجه‌ای مطابق فیلتر انتخابی برای خروجی CSV وجود ندارد.");
+        return;
+    }
+    const blob = generateCsvBlob(rows, layout);
+    triggerBlobDownload(blob, `${getExportBaseStem(filter)}.csv`);
+});
+
+$("exportJsonBtn").addEventListener("click", () => {
+    const payload = {
+        version: "4.0-html",
+        exported_at: new Date().toISOString(),
+        settings: settingsState,
+        jobState,
+        results: storage.records
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json;charset=utf-8" });
+    triggerBlobDownload(blob, `${getExportBaseStem("all")}_backup.json`);
+});
+
+$("importJsonBtn").addEventListener("click", () => $("importJsonInput").click());
+$("importJsonInput").addEventListener("change", async (ev) => {
+    const f = ev.target.files && ev.target.files[0];
+    if (!f) return;
+    try {
+        const data = JSON.parse(await f.text());
+        if (data.settings) {
+            settingsState = { ...settingsState, ...data.settings };
+            await storage.setKV("settings", settingsState);
+        }
+        if (data.jobState) {
+            jobState = { ...jobState, ...data.jobState };
+            await storage.setKV("jobState", jobState);
+        }
+        if (Array.isArray(data.results)) {
+            await storage.clearResultsOnly();
+            for (const item of data.results) {
+                await storage.addResult(item);
+            }
+        }
+        applySettingsToInputs();
+        renderStatusUI();
+        renderPreviewTable();
+        appendLog(`✅ فایل پشتیبان با موفقیت بازیابی شد (${persianDigits(storage.records.length)} رکورد).`);
+    } catch (e) {
+        alert("خطا در خواندن فایل پشتیبان: " + e.message);
+    }
+    ev.target.value = "";
+});
+
+$("resetAllBtn").addEventListener("click", async () => {
+    if (isRunning) { alert("ابتدا عملیات در حال اجرا را متوقف کنید."); return; }
+    if (!confirm("⚠️ هشدار: تمام کلمات کلیدی، لیست لوکیشن‌ها و کلیهٔ نتایج استخراج‌شده برای همیشه پاک می‌شوند. ادامه می‌دهید؟")) return;
+    if (!confirm("تأیید نهایی: آیا مطمئن هستید که همهٔ اطلاعات برنامه ریست شود؟")) return;
+
+    await storage.resetAll();
+    settingsState = {
+        keywords: [], locations: [], location_file_basename: "",
+        max_results: 120, page_delay: 3.2, loc_delay: 3.5,
+        custom_proxy_url: "", jina_api_key: ""
+    };
+    jobState = { current_index: -1, total_locations: 0, keyword: "", active_location: "", error: null };
+    applySettingsToInputs();
+    $("logBox").textContent = "برنامه به‌طور کامل ریست شد.";
+    renderStatusUI();
+    renderPreviewTable();
+    $("resetMsg").textContent = "✅ تمامی اطلاعات برنامه با موفقیت پاک و ریست شد.";
+});
+
+let searchTimer = null;
+$("previewSearch").addEventListener("input", () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(renderPreviewTable, 200);
+});
+$("keywords").addEventListener("input", updateInputCounters);
+$("locations").addEventListener("input", updateInputCounters);
+
+function applySettingsToInputs() {
+    $("keywords").value = (settingsState.keywords || []).join("\n");
+    $("locations").value = (settingsState.locations || []).join("\n");
+    $("maxResults").value = settingsState.max_results ?? 120;
+    $("pageDelay").value = settingsState.page_delay ?? 3.2;
+    $("locDelay").value = settingsState.loc_delay ?? 3.5;
+    $("dedupPhoneChk").checked = !!settingsState.dedup_by_phone;
+    $("customProxyUrl").value = settingsState.custom_proxy_url || "";
+    $("jinaApiKey").value = settingsState.jina_api_key || "";
+    updateFileBadge(settingsState.location_file_basename || "");
+    updateInputCounters();
+}
+
+const IS_SANDBOX_PREVIEW = (window.self !== window.top && window.origin === "null");
+
+async function readMainPanelConnectionDefaults() {
+    if (DB_NAME === BASE_DB_NAME) return null;
+    return new Promise((resolve) => {
+        try {
+            const req = indexedDB.open(BASE_DB_NAME, DB_VERSION);
+            req.onupgradeneeded = (ev) => {
+                const db = ev.target.result;
+                if (!db.objectStoreNames.contains("kv")) db.createObjectStore("kv", { keyPath: "k" });
+                if (!db.objectStoreNames.contains("results")) {
+                    const st = db.createObjectStore("results", { keyPath: "id", autoIncrement: true });
+                    st.createIndex("dedup_key", "dedup_key", { unique: true });
+                }
+            };
+            req.onsuccess = () => {
+                try {
+                    const db = req.result;
+                    const tx = db.transaction("kv", "readonly");
+                    const getReq = tx.objectStore("kv").get("settings");
+                    getReq.onsuccess = () => {
+                        db.close();
+                        resolve(getReq.result ? getReq.result.v : null);
+                    };
+                    getReq.onerror = () => { db.close(); resolve(null); };
+                } catch (_e2) { resolve(null); }
+            };
+            req.onerror = () => resolve(null);
+        } catch (_e) { resolve(null); }
+    });
+}
+
+$("openNewInstanceBtn").addEventListener("click", async () => {
+    const suggested = `استان_${Math.floor(10 + Math.random() * 90)}`;
+    const rawName = prompt(
+        "یک نام دلخواه برای تب مستقل جدید وارد کنید (مثلاً: استان اصفهان یا استان فارس).\nاین تب دیتابیس، جدول نتایج و فایل اکسل کاملاً جداگانه‌ای خواهد داشت و کلید Jina شما خودکار به آن منتقل می‌شود:",
+        suggested
+    );
+    if (!rawName || !rawName.trim()) return;
+    const cleanName = rawName.trim();
+    // اول تنظیمات فعلی (از جمله کلید Jina) را ذخیره می‌کنیم تا تب جدید خودکار به ارث ببرد
+    await persistSettingsFromUI().catch(() => {});
+    const baseHref = location.href.split("?")[0].split("#")[0];
+    const targetUrl = `${baseHref}?ws=${encodeURIComponent(cleanName)}#ws=${encodeURIComponent(cleanName)}`;
+    window.open(targetUrl, "_blank");
+});
+
+$("downloadSelfHtmlBtn").addEventListener("click", async () => {
+    if (location.protocol.startsWith("http")) {
+        try {
+            const res = await fetch("/gmaps_scraper.html");
+            if (res.ok) {
+                const rawBlob = await res.blob();
+                triggerBlobDownload(rawBlob, "gmaps_scraper.html");
+                return;
+            }
+        } catch (_e) {}
+    }
+    const alertEl = $("sandboxOfflineAlert");
+    const prevDisp = alertEl.style.display;
+    alertEl.style.display = "none";
+    const htmlSource = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+    alertEl.style.display = prevDisp;
+    const blob = new Blob([htmlSource], { type: "text/html;charset=utf-8" });
+    triggerBlobDownload(blob, "gmaps_scraper.html");
+});
+
+// راه‌اندازی اولیهٔ برنامه در مرورگر
+(async function initApp() {
+    $("activeWorkspacePill").textContent = `📌 پنل فعال: ${WORKSPACE.label}`;
+    if (WORKSPACE.wsName) {
+        document.title = `[${WORKSPACE.wsName}] پنل استخراج گوگل مپ`;
+    }
+    if (IS_SANDBOX_PREVIEW) {
+        $("sandboxOfflineAlert").style.display = "block";
+    }
+    await storage.init();
+    const savedSettings = await storage.getKV("settings", null);
+    if (savedSettings) {
+        settingsState = { ...settingsState, ...savedSettings };
+    } else if (WORKSPACE.wsName) {
+        // در اولین باز شدن پنل/استان جدید، کلید Jina و پروکسی را خودکار از پنل اصلی به ارث ببر
+        settingsState.location_file_basename = WORKSPACE.wsName;
+        const mainDefaults = await readMainPanelConnectionDefaults();
+        if (mainDefaults) {
+            settingsState.jina_api_key = mainDefaults.jina_api_key || "";
+            settingsState.custom_proxy_url = mainDefaults.custom_proxy_url || "";
+            if (Array.isArray(mainDefaults.keywords) && mainDefaults.keywords.length) {
+                settingsState.keywords = mainDefaults.keywords.slice();
+            }
+        }
+        await storage.setKV("settings", settingsState);
+    }
+    const savedJob = await storage.getKV("jobState", null);
+    if (savedJob) jobState = { ...jobState, ...savedJob, error: null, active_location: "" };
+
+    applySettingsToInputs();
+    await detectLocalRelay();
+    renderStatusUI();
+    renderPreviewTable();
+})();
+
+})();
+</script>
+
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4f2f6df4ee9e9db',t:'MTc5Mjc4MTgxMw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
