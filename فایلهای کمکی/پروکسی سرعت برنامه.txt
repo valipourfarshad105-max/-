@@ -1,0 +1,13 @@
+
+آدرس‌های پروکسی / Cloudflare Worker 
+
+https://gmaps1.valipourfarshad105.workers.dev
+https://gmaps2.valipourfarshad105.workers.dev
+https://gmaps3.valipourfarshad105.workers.dev
+https://gmaps4.valipourfarshad105.workers.dev
+https://gmaps5.valipourfarshad105.workers.dev
+
+-----------------------------------------------------------------------------------------------------------------
+کلید رایگان Jina API برای سرعت ۱۰ برابر
+
+jina_6dfd500f3b184506a0ee677a4362b142Us6q-qjC73rLP-XwGuDcCf6CjWhU
